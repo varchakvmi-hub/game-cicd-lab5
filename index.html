@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Space Defender — CI/CD Demo Game</title>
+  <style>
+    body { font-family: sans-serif; background: #121212; color: #fff; text-align: center; padding-top: 50px; }
+    button { padding: 15px 25px; font-size: 18px; margin: 10px; cursor: pointer; border: none; border-radius: 8px; }
+    .attack { background: #28a745; color: white; }
+    .damage { background: #dc3545; color: white; }
+  </style>
+</head>
+<body>
+  <h1>🚀 Space Defender (v1.0)</h1>
+  <h2 id="stats">Очки: 0 | Здоров'я: 100 HP</h2>
+  <button class="attack" onclick="attack()">Атакувати ворога (+10)</button>
+  <button class="damage" onclick="damage()">Отримати урон (-25)</button>
+
+  <script src="game.js"></script>
+  <script>
+    const game = new GameEngine();
+    function updateUI() {
+      const status = game.isGameOver ? "💀 ГРУ ЗАВЕРШЕНО!" : `Очки: ${game.score} | Здоров'я: ${game.health} HP`;
+      document.getElementById('stats').innerText = status;
+    }
+    function attack() { game.hitEnemy(10); updateUI(); }
+    function damage() { game.takeDamage(25); updateUI(); }
+  </script>
+</body>
+</html>
