@@ -1,0 +1,9 @@
+{
+  "name": "space-defender-game",
+  "version": "1.0.0",
+  "description": "Mini HTML5 game for CI/CD Lab 5",
+  "scripts": {
+    "test": "node --test game.test.js",
+    "build": "mkdir -p dist && cp index.html game.js dist/"
+  }
+}
