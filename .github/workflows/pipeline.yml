@@ -1,0 +1,89 @@
+name: Game CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+    paths-ignore:
+      - '**.md'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  # ЕТАП 1: Автоматичні юніт-тести
+  test:
+    name: Run Game Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run Unit Tests
+        run: npm test
+
+  # ЕТАП 2: Збірка проєкту (запускається ТІЛЬКИ якщо тести пройшли)
+  build:
+    name: Build Web Game
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Game Bundle
+        run: npm run build
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: game-dist
+          path: dist/
+
+  # ЕТАП 3: Безперервна доставка (CD) на тестове середовище
+  deploy:
+    name: Deploy to Staging (GitHub Pages)
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: game-dist
+          path: ./dist
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  # ЕТАП 4: Звіт про виконання pipeline
+  report:
+    name: Send Pipeline Report
+    needs: [test, build, deploy]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate Summary Report
+        run: |
+          echo "## Звіт CI/CD Pipeline" >> $GITHUB_STEP_SUMMARY
+          echo "- **Тести:** ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Збірка:** ${{ needs.build.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Деплой:** ${{ needs.deploy.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Тестове середовище:** ${{ needs.deploy.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
